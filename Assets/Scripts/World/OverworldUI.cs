@@ -1,4 +1,5 @@
 using UnityEngine;
+using Spartha.Data;
 
 namespace Spartha.World
 {
@@ -21,6 +22,19 @@ namespace Spartha.World
         // Region label
         public string currentRegion = "Neon Flats";
         public int playerLevel = 1;
+
+        // Trainer rank system
+        public TrainerRankData trainerData = new TrainerRankData();
+        private GUIStyle rankStyle;
+        private GUIStyle sparkOneStyle;
+        private Texture2D rankBgTex;
+
+        // SparkOne territory
+        public SparkOneTerritorySystem territorySystem = new SparkOneTerritorySystem();
+        public string currentTownId = "neon_flats";
+        private bool showingSparkOneAlert;
+        private string sparkOneAlertText = "";
+        private float sparkOneAlertTimer;
 
         // Styles
         private GUIStyle panelStyle;
@@ -68,6 +82,18 @@ namespace Spartha.World
             bigStyle.normal.textColor = new Color(1f, 0.3f, 0.2f);
             bigStyle.fontStyle = FontStyle.Bold;
             bigStyle.alignment = TextAnchor.MiddleCenter;
+
+            rankStyle = new GUIStyle(GUI.skin.label);
+            rankStyle.fontSize = 16;
+            rankStyle.fontStyle = FontStyle.Bold;
+            rankStyle.alignment = TextAnchor.MiddleLeft;
+
+            sparkOneStyle = new GUIStyle(GUI.skin.label);
+            sparkOneStyle.fontSize = 28;
+            sparkOneStyle.fontStyle = FontStyle.Bold;
+            sparkOneStyle.alignment = TextAnchor.MiddleCenter;
+
+            rankBgTex = MakeTex(2, 2, new Color(0.08f, 0.06f, 0.15f, 0.88f));
 
             stylesInit = true;
         }
@@ -128,6 +154,8 @@ namespace Spartha.World
 
             if (showingEncounter)
                 DrawEncounterFlash();
+
+            DrawSparkOneAlert();
         }
 
         void DrawRegionLabel()
@@ -139,12 +167,70 @@ namespace Spartha.World
 
         void DrawMiniHUD()
         {
-            float w = 180, h = 30;
-            GUI.Box(new Rect(15, 12, w + 4, h + 4), "", panelStyle);
+            TrainerRank rank = TrainerRankData.GetRankForLevel(playerLevel);
+            TrainerRank effectiveRank = territorySystem.GetEffectiveRank("player", rank, currentTownId);
+            string rankTitle = TrainerRankData.GetRankTitle(effectiveRank);
+            Color rankColor = TrainerRankData.GetRankColor(effectiveRank);
 
+            float w = 260, h = 52;
+            GUI.DrawTexture(new Rect(13, 10, w + 8, h + 8), rankBgTex);
+
+            // Rank title with color
+            rankStyle.normal.textColor = rankColor;
+            GUI.Label(new Rect(20, 12, w, 22), rankTitle, rankStyle);
+
+            // Level
             var lvStyle = new GUIStyle(labelStyle);
-            lvStyle.fontSize = 18;
-            GUI.Label(new Rect(20, 14, w, h), $"Trainer Lv. {playerLevel}", lvStyle);
+            lvStyle.fontSize = 16;
+            lvStyle.normal.textColor = new Color(0.8f, 0.8f, 0.85f);
+            GUI.Label(new Rect(20, 34, w, 22), $"Lv. {playerLevel}", lvStyle);
+
+            // SparkOne crown icon if applicable
+            if (effectiveRank == TrainerRank.SparkOne)
+            {
+                float pulse = 0.7f + 0.3f * Mathf.Sin(Time.time * 2f);
+                Color gold = new Color(1f, 0.85f, 0f, pulse);
+                GUI.DrawTexture(new Rect(w - 15, 14, 18, 18), MakeTex(2, 2, gold));
+            }
+
+            // SparkOne territory info
+            var territory = territorySystem.GetTerritory(currentTownId);
+            if (territory != null && !territory.isVacant)
+            {
+                var soStyle = new GUIStyle(rankStyle);
+                soStyle.fontSize = 13;
+                soStyle.normal.textColor = new Color(1f, 0.85f, 0.3f, 0.8f);
+                GUI.Label(new Rect(20, 58, w, 18),
+                    $"\u2654 SparkOne: {territory.sparkOneDisplayName}", soStyle);
+            }
+            else if (territory != null && territory.isVacant)
+            {
+                var soStyle = new GUIStyle(rankStyle);
+                soStyle.fontSize = 13;
+                soStyle.normal.textColor = new Color(0.5f, 0.5f, 0.55f);
+                GUI.Label(new Rect(20, 58, w, 18), "SparkOne: [VACANT]", soStyle);
+            }
+        }
+
+        void DrawSparkOneAlert()
+        {
+            if (!showingSparkOneAlert) return;
+            sparkOneAlertTimer -= Time.deltaTime;
+            if (sparkOneAlertTimer <= 0) { showingSparkOneAlert = false; return; }
+
+            float pw = 500, ph = 60;
+            float px = (Screen.width - pw) / 2;
+            float py = 80;
+            GUI.DrawTexture(new Rect(px - 3, py - 3, pw + 6, ph + 6), rankBgTex);
+            sparkOneStyle.normal.textColor = new Color(1f, 0.85f, 0f);
+            GUI.Label(new Rect(px, py, pw, ph), sparkOneAlertText, sparkOneStyle);
+        }
+
+        public void ShowSparkOneAlert(string text)
+        {
+            showingSparkOneAlert = true;
+            sparkOneAlertText = text;
+            sparkOneAlertTimer = 4f;
         }
 
         void DrawDialogueBox()
