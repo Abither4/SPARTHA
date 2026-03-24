@@ -3,190 +3,107 @@ using UnityEngine;
 namespace Spartha.World
 {
     /// <summary>
-    /// Production-quality billboard sprite renderer for JRPG-style characters.
-    /// Renders a sprite sheet (4 columns x 2 rows) on a custom quad with:
-    ///   - Crisp pixel-art rendering with proper alpha transparency
-    ///   - Y-axis-only billboarding (character stays upright)
-    ///   - Camera-relative facing direction detection
-    ///   - Smooth two-frame walk animation
-    ///   - Drop shadow on the ground
+    /// Production-quality billboard sprite renderer for JRPG-style chibi characters.
+    /// Uses Unity's native SpriteRenderer for proper transparency, sorting, and rendering.
     ///
-    /// Sheet layout:
-    ///   Row 0 (top):    idle frames — front, back, left, right
-    ///   Row 1 (bottom): walk frames — front, back, left, right
+    /// Sprite sheet layout (4 columns x 2 rows):
+    ///   Row 0 (top):    idle frames  — front, back, left, right
+    ///   Row 1 (bottom): walk frames  — front, back, left, right
+    ///
+    /// Features:
+    ///   - Native SpriteRenderer (no custom mesh/material hacks)
+    ///   - Runtime sprite atlas slicing via Sprite.Create()
+    ///   - Y-axis-only billboarding (character stays upright)
+    ///   - Camera-relative facing direction
+    ///   - Two-frame walk animation (idle/walk toggle)
+    ///   - Soft ellipse drop shadow
+    ///   - Bilinear filtering for smooth painted chibi art
     /// </summary>
     public class PlayerBillboard : MonoBehaviour
     {
-        // ── Tuning constants ──────────────────────────────────────────────
-        const float SpriteWorldHeight = 2.2f;   // height in world units (chibi proportions)
-        const float SpriteAspect = 1.0f;         // width / height per frame (square cells)
-        const float SpriteYOffset = 0.05f;       // slight raise so quad bottom clears the ground plane
-        const float WalkToggleRate = 0.2f;       // seconds between walk frames
-        const float MovementThreshold = 0.008f;  // minimum movement to count as walking
-
-        // Shadow tuning
-        const float ShadowWidth = 1.2f;
-        const float ShadowLength = 0.7f;
-        const float ShadowYOffset = 0.02f;       // just above ground to avoid z-fight
-        const float ShadowAlpha = 0.35f;
+        // ── Tuning ──────────────────────────────────────────────────────────
+        const float SpriteWorldHeight = 2.2f;       // desired height in world units
+        const float WalkToggleRate    = 0.2f;        // seconds per walk frame toggle
+        const float MovementThreshold = 0.008f;      // min movement to count as walking
+        const float ShadowScaleX      = 1.4f;        // shadow ellipse width
+        const float ShadowScaleY      = 0.5f;        // shadow ellipse depth (foreshortened)
+        const float ShadowYOffset     = 0.02f;       // just above ground to avoid z-fight
+        const float ShadowAlpha       = 0.32f;       // shadow opacity
+        const float SpriteYOffset     = 0.05f;       // slight raise above ground
+        const int   ShadowTexSize     = 64;          // shadow texture resolution
 
         // Sheet layout
-        const int Columns = 4;
-        const int Rows = 2;
+        const int Cols = 4;  // front, back, left, right
+        const int Rows = 2;  // idle, walk
 
-        // ── Runtime state ─────────────────────────────────────────────────
+        // ── Runtime state ───────────────────────────────────────────────────
         Texture2D spriteSheet;
-        Material spriteMat;
-        Material shadowMat;
-        MeshFilter spriteMeshFilter;
-        MeshRenderer spriteRenderer;
-        GameObject spriteQuad;
-        GameObject shadowQuad;
+        Sprite[,] frames;              // [row, col] — sliced sprites
+        SpriteRenderer spriteRenderer;
+        SpriteRenderer shadowRenderer;
+        GameObject spriteObj;
+        GameObject shadowObj;
 
-        // Animation state
+        // Animation
         float animTimer;
         bool useWalkFrame;
-        int currentCol;   // 0=front, 1=back, 2=left, 3=right
-        int currentRow;   // 0=idle row (top of sheet), 1=walk row (bottom)
+        int currentCol;                // 0=front, 1=back, 2=left, 3=right
+        int currentRow;                // 0=idle, 1=walk
         Vector3 lastPos;
 
-        // Cached UV arrays to avoid GC
-        Vector2[] uvs = new Vector2[4];
-
-        // ── Initialization ────────────────────────────────────────────────
+        // ── Initialization ──────────────────────────────────────────────────
 
         void Start()
         {
-            CreateSpriteQuad();
+            CreateSpriteObject();
             CreateShadow();
             HideChildPrimitives();
             lastPos = transform.position;
         }
 
-        void CreateSpriteQuad()
+        void CreateSpriteObject()
         {
-            spriteQuad = new GameObject("PlayerSprite");
-            spriteQuad.transform.SetParent(transform, false);
-            spriteQuad.transform.localPosition = new Vector3(0f, SpriteYOffset, 0f);
+            spriteObj = new GameObject("PlayerSprite");
+            spriteObj.transform.SetParent(transform, false);
+            spriteObj.transform.localPosition = new Vector3(0f, SpriteYOffset, 0f);
 
-            // Build a custom quad mesh (avoids Unity's built-in Quad vertex ordering issues)
-            Mesh mesh = CreateQuadMesh(SpriteWorldHeight * SpriteAspect, SpriteWorldHeight);
-
-            spriteMeshFilter = spriteQuad.AddComponent<MeshFilter>();
-            spriteMeshFilter.mesh = mesh;
-
-            spriteRenderer = spriteQuad.AddComponent<MeshRenderer>();
+            spriteRenderer = spriteObj.AddComponent<SpriteRenderer>();
+            spriteRenderer.sortingOrder = 10;
             spriteRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             spriteRenderer.receiveShadows = false;
-            spriteRenderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-            spriteRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
 
-            // Create material — use Sprites/Default for clean unlit alpha blending
-            Shader shader = Shader.Find("Sprites/Default");
-            if (shader == null) shader = Shader.Find("Unlit/Transparent");
-            if (shader == null) shader = Shader.Find("Legacy Shaders/Transparent/Diffuse");
-
-            spriteMat = new Material(shader);
-            spriteMat.color = Color.white;
-            spriteMat.SetInt("_Cull", 0); // disable backface culling
-
-            // Render in the Transparent queue
-            spriteMat.renderQueue = 2999;
-
-            spriteRenderer.material = spriteMat;
+            // Material: Sprites/Default works perfectly in built-in pipeline
+            // SpriteRenderer sets this automatically, but we ensure it
+            spriteRenderer.sharedMaterial = new Material(Shader.Find("Sprites/Default"));
         }
 
         void CreateShadow()
         {
-            shadowQuad = new GameObject("PlayerShadow");
-            shadowQuad.transform.SetParent(transform, false);
-            // Flat on the ground, slightly above to avoid z-fighting
-            shadowQuad.transform.localPosition = new Vector3(0f, ShadowYOffset, 0f);
-            // Rotate to lie flat on the XZ plane
-            shadowQuad.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            shadowObj = new GameObject("PlayerShadow");
+            shadowObj.transform.SetParent(transform, false);
+            // Flat on the ground, rotated to lie on XZ plane
+            shadowObj.transform.localPosition = new Vector3(0f, ShadowYOffset, 0f);
+            shadowObj.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            shadowObj.transform.localScale = new Vector3(ShadowScaleX, ShadowScaleY, 1f);
 
-            Mesh mesh = CreateQuadMesh(ShadowWidth, ShadowLength);
+            shadowRenderer = shadowObj.AddComponent<SpriteRenderer>();
+            shadowRenderer.sortingOrder = 5;  // below character sprite
+            shadowRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            shadowRenderer.receiveShadows = false;
 
-            var mf = shadowQuad.AddComponent<MeshFilter>();
-            mf.mesh = mesh;
-
-            var mr = shadowQuad.AddComponent<MeshRenderer>();
-            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            mr.receiveShadows = false;
-            mr.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-            mr.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-
-            // Create a dark semi-transparent ellipse texture for the shadow
-            Texture2D shadowTex = CreateShadowTexture(64, 64);
-
-            Shader shader = Shader.Find("Sprites/Default");
-            if (shader == null) shader = Shader.Find("Unlit/Transparent");
-
-            shadowMat = new Material(shader);
-            shadowMat.mainTexture = shadowTex;
-            shadowMat.color = Color.white;
-            shadowMat.renderQueue = 2998; // render just before sprite
-
-            mr.material = shadowMat;
+            // Generate a soft ellipse shadow sprite at runtime
+            Texture2D shadowTex = CreateShadowTexture(ShadowTexSize, ShadowTexSize);
+            Rect rect = new Rect(0, 0, shadowTex.width, shadowTex.height);
+            Vector2 pivot = new Vector2(0.5f, 0.5f);
+            float ppu = shadowTex.height; // 1 world unit = full texture height
+            Sprite shadowSprite = Sprite.Create(shadowTex, rect, pivot, ppu);
+            shadowRenderer.sprite = shadowSprite;
         }
 
-        /// <summary>
-        /// Creates a simple quad mesh with predictable vertex layout.
-        /// Vertices: 0=BL, 1=BR, 2=TL, 3=TR.
-        /// The quad faces toward local -Z (visible from +Z looking at -Z).
-        /// Pivot is at the bottom-center so the sprite "stands" on its origin.
-        /// </summary>
-        Mesh CreateQuadMesh(float width, float height)
-        {
-            float halfW = width * 0.5f;
-
-            var mesh = new Mesh();
-            mesh.name = "SpriteQuad";
-
-            mesh.vertices = new Vector3[]
-            {
-                new Vector3(-halfW, 0f,    0f),  // 0: bottom-left
-                new Vector3( halfW, 0f,    0f),  // 1: bottom-right
-                new Vector3(-halfW, height, 0f), // 2: top-left
-                new Vector3( halfW, height, 0f)  // 3: top-right
-            };
-
-            mesh.uv = new Vector2[]
-            {
-                new Vector2(0f, 0f),  // 0: BL
-                new Vector2(1f, 0f),  // 1: BR
-                new Vector2(0f, 1f),  // 2: TL
-                new Vector2(1f, 1f)   // 3: TR
-            };
-
-            // Double-sided triangles so the face is visible from both sides
-            mesh.triangles = new int[]
-            {
-                0, 2, 1,  // front face: BL -> TL -> BR
-                2, 3, 1,  // front face: TL -> TR -> BR
-                0, 1, 2,  // back face
-                2, 1, 3   // back face
-            };
-
-            mesh.normals = new Vector3[]
-            {
-                Vector3.back,
-                Vector3.back,
-                Vector3.back,
-                Vector3.back
-            };
-
-            mesh.RecalculateBounds();
-            return mesh;
-        }
-
-        /// <summary>
-        /// Creates a soft ellipse shadow texture at runtime.
-        /// </summary>
         Texture2D CreateShadowTexture(int w, int h)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            tex.filterMode = FilterMode.Bilinear; // shadow should be smooth
+            tex.filterMode = FilterMode.Bilinear;
             tex.wrapMode = TextureWrapMode.Clamp;
 
             Color[] pixels = new Color[w * h];
@@ -197,32 +114,25 @@ namespace Spartha.World
             {
                 for (int x = 0; x < w; x++)
                 {
-                    // Normalized distance from center (ellipse)
                     float dx = (x - cx) / cx;
                     float dy = (y - cy) / cy;
                     float dist = dx * dx + dy * dy;
 
-                    // Smooth falloff
                     float alpha = 0f;
                     if (dist < 1f)
                     {
-                        // Smooth cubic falloff for soft shadow edge
                         float t = 1f - dist;
-                        alpha = t * t * ShadowAlpha;
+                        alpha = t * t * ShadowAlpha; // smooth quadratic falloff
                     }
-
                     pixels[y * w + x] = new Color(0f, 0f, 0f, alpha);
                 }
             }
 
             tex.SetPixels(pixels);
-            tex.Apply(false, true); // make non-readable to save memory
+            tex.Apply(false, true); // non-readable to save memory
             return tex;
         }
 
-        /// <summary>
-        /// Hides the old placeholder 3D primitives (capsule body, sphere head, sphere hair).
-        /// </summary>
         void HideChildPrimitives()
         {
             Transform playerRoot = transform.parent;
@@ -233,75 +143,134 @@ namespace Spartha.World
             {
                 string n = r.gameObject.name;
                 if (n == "PlayerBody" || n == "PlayerHead" || n == "PlayerHair")
-                {
                     r.gameObject.SetActive(false);
+            }
+        }
+
+        // ── Public API ──────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Assigns a 4x2 sprite sheet and slices it into individual Sprite frames.
+        /// Call this when the player selects a character.
+        /// </summary>
+        public void SetSpriteSheet(Texture2D sheet)
+        {
+            if (sheet == null) return;
+
+            spriteSheet = sheet;
+
+            // These are painted chibi sprites, not pixel art — use Bilinear for smooth rendering.
+            // If you swap to pixel art sheets, change to FilterMode.Point.
+            sheet.filterMode = FilterMode.Bilinear;
+            sheet.wrapMode = TextureWrapMode.Clamp;
+
+            SliceFrames(sheet);
+
+            // Show initial frame: front idle
+            currentCol = 0;
+            currentRow = 0;
+            ApplyFrame();
+        }
+
+        /// <summary>
+        /// Slices the sprite sheet into a [row, col] array of Sprite objects.
+        /// Each sprite is created with Sprite.Create() using the exact pixel rect
+        /// from the sheet, with a bottom-center pivot so the character stands on its origin.
+        /// </summary>
+        void SliceFrames(Texture2D sheet)
+        {
+            int frameW = sheet.width / Cols;
+            int frameH = sheet.height / Rows;
+
+            // Calculate pixels-per-unit so each frame renders at SpriteWorldHeight world units tall.
+            float ppu = frameH / SpriteWorldHeight;
+
+            frames = new Sprite[Rows, Cols];
+
+            for (int row = 0; row < Rows; row++)
+            {
+                for (int col = 0; col < Cols; col++)
+                {
+                    // Unity texture coords: (0,0) is bottom-left.
+                    // Sheet row 0 (idle) is the TOP of the image => higher y pixel coords.
+                    // Sheet row 1 (walk) is the BOTTOM => lower y pixel coords.
+                    int pixelY = (row == 0) ? frameH : 0;  // row0=top half, row1=bottom half
+                    int pixelX = col * frameW;
+
+                    Rect rect = new Rect(pixelX, pixelY, frameW, frameH);
+
+                    // Pivot at bottom-center (0.5, 0.0) so sprite stands on its feet
+                    Vector2 pivot = new Vector2(0.5f, 0.0f);
+
+                    frames[row, col] = Sprite.Create(
+                        sheet, rect, pivot, ppu,
+                        0, SpriteMeshType.FullRect
+                    );
+                    frames[row, col].name = $"frame_r{row}_c{col}";
                 }
             }
         }
 
-        // ── Public API ────────────────────────────────────────────────────
-
-        public void SetSpriteSheet(Texture2D sheet)
-        {
-            spriteSheet = sheet;
-            if (sheet == null || spriteMat == null) return;
-
-            // Configure texture for crisp pixel art
-            sheet.filterMode = FilterMode.Point;
-            sheet.wrapMode = TextureWrapMode.Clamp;
-
-            spriteMat.mainTexture = sheet;
-
-            // Set initial frame: front idle
-            currentCol = 0;
-            currentRow = 0;
-            UpdateUVs(0, 0);
-        }
-
-        // ── Per-Frame Update ──────────────────────────────────────────────
+        // ── Per-Frame Update ────────────────────────────────────────────────
 
         void LateUpdate()
         {
-            if (spriteSheet == null) return;
+            if (frames == null) return;
 
             BillboardToCamera();
             UpdateFacingAndAnimation();
-            UpdateUVs(currentCol, currentRow);
+            ApplyFrame();
 
             lastPos = transform.position;
         }
 
         /// <summary>
-        /// Y-axis-only billboard: sprite always faces the camera but stays upright.
-        /// Uses world-space rotation so the Player root's own rotation doesn't matter.
+        /// Applies the current frame sprite to the SpriteRenderer.
+        /// Uses flipX for left-facing to mirror the right-facing frame if desired,
+        /// but since our sheets have unique left/right frames, we use them directly.
+        /// </summary>
+        void ApplyFrame()
+        {
+            if (spriteRenderer == null || frames == null) return;
+
+            int row = Mathf.Clamp(currentRow, 0, Rows - 1);
+            int col = Mathf.Clamp(currentCol, 0, Cols - 1);
+
+            spriteRenderer.sprite = frames[row, col];
+
+            // The sheet has distinct left (col 2) and right (col 3) frames,
+            // so no flipX is needed. If your sheet mirrors them, uncomment:
+            // spriteRenderer.flipX = (col == 2);
+        }
+
+        /// <summary>
+        /// Y-axis-only billboard: the sprite always faces the camera but stays upright.
+        /// We rotate the sprite object in world space so the parent's rotation doesn't interfere.
         /// </summary>
         void BillboardToCamera()
         {
             Camera cam = Camera.main;
             if (cam == null) return;
 
-            // Get the camera's forward direction projected onto the XZ plane
+            // Camera forward projected onto XZ plane
             Vector3 camForward = cam.transform.forward;
             camForward.y = 0f;
 
             if (camForward.sqrMagnitude < 0.001f) return;
-
             camForward.Normalize();
 
-            // The quad's visible face points toward local -Z (normals are -forward).
-            // We want the visible face to point AT the camera, so the quad's +Z should
-            // point AWAY from the camera — which is the same as the camera's forward.
-            // LookRotation points the object's +Z along the given direction.
-            Quaternion rotation = Quaternion.LookRotation(camForward, Vector3.up);
+            // SpriteRenderer faces local forward (+Z by default in Unity's sprite rendering).
+            // We want the sprite to face the camera, so point it opposite to camera forward.
+            // LookRotation points +Z along the given direction, so we use -camForward
+            // to make the sprite face toward the camera.
+            Quaternion rotation = Quaternion.LookRotation(-camForward, Vector3.up);
 
-            // Set world rotation directly — this overrides the parent Player's rotation
-            // so the sprite doesn't spin when the PlayerController rotates the root.
-            spriteQuad.transform.rotation = rotation;
+            // Set world rotation directly — ignores parent Player rotation
+            spriteObj.transform.rotation = rotation;
         }
 
         /// <summary>
-        /// Determines which sprite frame to show based on movement direction
-        /// relative to the camera, and toggles the walk animation.
+        /// Determines facing direction (relative to camera) and toggles walk animation.
         /// </summary>
         void UpdateFacingAndAnimation()
         {
@@ -311,25 +280,21 @@ namespace Spartha.World
 
             if (isMoving)
             {
-                // Determine facing direction relative to camera
                 Camera cam = Camera.main;
                 if (cam != null)
                 {
-                    Vector3 camForward = cam.transform.forward;
-                    Vector3 camRight = cam.transform.right;
-                    camForward.y = 0f; camForward.Normalize();
-                    camRight.y = 0f; camRight.Normalize();
+                    Vector3 camFwd = cam.transform.forward;
+                    Vector3 camRgt = cam.transform.right;
+                    camFwd.y = 0f; camFwd.Normalize();
+                    camRgt.y = 0f; camRgt.Normalize();
 
-                    // Project movement onto camera axes
-                    float fwd = Vector3.Dot(movement.normalized, camForward);
-                    float rgt = Vector3.Dot(movement.normalized, camRight);
+                    float fwd = Vector3.Dot(movement.normalized, camFwd);
+                    float rgt = Vector3.Dot(movement.normalized, camRgt);
 
                     if (Mathf.Abs(fwd) >= Mathf.Abs(rgt))
                     {
-                        // Moving more forward/backward relative to camera
-                        // Moving AWAY from camera = we see the character's back
-                        // Moving TOWARD camera = we see the front
-                        currentCol = fwd > 0 ? 1 : 0; // away=back, toward=front
+                        // Moving away from camera = character's back; toward = front
+                        currentCol = fwd > 0 ? 1 : 0;
                     }
                     else
                     {
@@ -337,7 +302,7 @@ namespace Spartha.World
                     }
                 }
 
-                // Walk animation: two-frame cycle (idle row + walk row)
+                // Two-frame walk cycle: toggle between idle row and walk row
                 animTimer += Time.deltaTime;
                 if (animTimer >= WalkToggleRate)
                 {
@@ -348,55 +313,11 @@ namespace Spartha.World
             }
             else
             {
-                // Standing still: idle row
+                // Standing still: idle frame
                 currentRow = 0;
                 animTimer = 0f;
                 useWalkFrame = false;
             }
-        }
-
-        /// <summary>
-        /// Updates the quad mesh UVs to display the correct frame from the sprite sheet.
-        /// Direct UV manipulation is more reliable than mainTextureScale/Offset
-        /// and avoids sub-pixel bleeding between frames.
-        ///
-        /// UV coordinate system: (0,0) = bottom-left of texture, (1,1) = top-right.
-        /// Sheet row 0 (idle) is the TOP half of the image = UV y [0.5 .. 1.0]
-        /// Sheet row 1 (walk) is the BOTTOM half      = UV y [0.0 .. 0.5]
-        /// </summary>
-        void UpdateUVs(int col, int row)
-        {
-            if (spriteMeshFilter == null || spriteMeshFilter.mesh == null) return;
-
-            float cellW = 1f / Columns;
-            float cellH = 1f / Rows;
-
-            float uMin = col * cellW;
-            float uMax = (col + 1) * cellW;
-
-            // Row 0 (idle) = top of image = higher UV y values
-            // Row 1 (walk) = bottom of image = lower UV y values
-            float vMin = (row == 0) ? 0.5f : 0.0f;
-            float vMax = vMin + 0.5f;
-
-            // Half-pixel inset to avoid bleeding from neighboring frames
-            if (spriteSheet != null)
-            {
-                float pxU = 0.5f / spriteSheet.width;
-                float pxV = 0.5f / spriteSheet.height;
-                uMin += pxU;
-                uMax -= pxU;
-                vMin += pxV;
-                vMax -= pxV;
-            }
-
-            // Our custom mesh: 0=BL, 1=BR, 2=TL, 3=TR
-            uvs[0] = new Vector2(uMin, vMin);
-            uvs[1] = new Vector2(uMax, vMin);
-            uvs[2] = new Vector2(uMin, vMax);
-            uvs[3] = new Vector2(uMax, vMax);
-
-            spriteMeshFilter.mesh.uv = uvs;
         }
     }
 }
