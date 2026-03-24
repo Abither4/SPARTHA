@@ -1375,11 +1375,11 @@ public class OverworldBuilder : EditorWindow
         player.AddComponent<PlayerController>();
         player.AddComponent<RandomEncounter>();
 
-        // Billboard sprite holder (child object)
-        var spriteHolder = new GameObject("SpriteHolder");
-        spriteHolder.transform.parent = player.transform;
-        spriteHolder.transform.localPosition = Vector3.zero;
-        spriteHolder.AddComponent<PlayerBillboard>();
+        // 3D character model holder (child object — model built at runtime by CharacterSelect)
+        var modelHolder = new GameObject("ModelHolder");
+        modelHolder.transform.parent = player.transform;
+        modelHolder.transform.localPosition = Vector3.zero;
+        modelHolder.AddComponent<PlayerBillboard>();
 
         return player;
     }

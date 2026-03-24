@@ -9,8 +9,9 @@ namespace Spartha.World
         public bool hasChosen;
         public int selectedIndex;
         public string selectedName;
-        public Texture2D selectedSheet;
 
+        // Keep sheet references for backward compatibility (other systems may reference them)
+        public Texture2D selectedSheet;
         private Texture2D braydenSheet;
         private Texture2D emilySheet;
         private Texture2D lukeSheet;
@@ -40,7 +41,8 @@ namespace Spartha.World
             public string tagline;
             public string description;
             public Color color;
-            public Texture2D sheet;
+            public int characterIndex;
+            public Texture2D sheet; // kept for fallback
         }
 
         private CharacterDef[] characters;
@@ -65,6 +67,7 @@ namespace Spartha.World
                     tagline = "The Adventurous One",
                     description = "Curious and fearless, Emily is always first to explore. She turns every obstacle into a discovery.",
                     color = new Color(0.91f, 0.26f, 0.58f),
+                    characterIndex = CharacterModelBuilder.EMILY,
                     sheet = emilySheet
                 },
                 new CharacterDef {
@@ -73,6 +76,7 @@ namespace Spartha.World
                     tagline = "The Protector",
                     description = "Calm under pressure and fiercely loyal. Brayden never leaves anyone behind — especially not family.",
                     color = new Color(0.23f, 0.61f, 0.86f),
+                    characterIndex = CharacterModelBuilder.BRAYDEN,
                     sheet = braydenSheet
                 },
                 new CharacterDef {
@@ -81,6 +85,7 @@ namespace Spartha.World
                     tagline = "The Fearless One",
                     description = "Energetic and unstoppable. Luke doesn't know the meaning of danger — which makes him either very brave or very reckless.",
                     color = new Color(0.95f, 0.61f, 0.07f),
+                    characterIndex = CharacterModelBuilder.LUKE,
                     sheet = lukeSheet
                 }
             };
@@ -102,13 +107,13 @@ namespace Spartha.World
                 selectedName = characters[hoverIndex].name;
                 selectedSheet = characters[hoverIndex].sheet;
 
-                // Apply sprite to player
+                // Apply 3D character model to player
                 var player = GameObject.Find("Player");
                 if (player != null)
                 {
                     var billboard = player.GetComponentInChildren<PlayerBillboard>();
                     if (billboard != null)
-                        billboard.SetSpriteSheet(selectedSheet);
+                        billboard.SetCharacter(characters[hoverIndex].characterIndex);
                 }
 
                 // Enable player controller
@@ -148,7 +153,6 @@ namespace Spartha.World
             headerStyle.normal.textColor = new Color(0.6f, 0.4f, 0.9f);
             headerStyle.fontStyle = FontStyle.Bold;
             headerStyle.alignment = TextAnchor.MiddleCenter;
-
 
             nameStyle = new GUIStyle(GUI.skin.label);
             nameStyle.fontSize = 22;
@@ -220,24 +224,17 @@ namespace Spartha.World
                 GUI.DrawTexture(new Rect(cx - 2, cardY - 2, cardW + 4, cardH + 4), MakeBorderTex(selected ? ch.color : new Color(0.3f, 0.3f, 0.35f)));
                 GUI.DrawTexture(new Rect(cx, cardY, cardW, cardH), bg);
 
-                // Sprite preview (top-left frame of sheet)
-                float spriteSize = cardW - 30;
-                float spriteX = cx + 15;
-                float spriteY = cardY + 15;
+                // Character icon area — colored silhouette preview
+                float iconSize = cardW - 30;
+                float iconX = cx + 15;
+                float iconY = cardY + 15;
 
-                // Tinted background behind sprite
+                // Tinted background behind icon
                 Color tintBg = new Color(ch.color.r, ch.color.g, ch.color.b, 0.15f);
-                GUI.DrawTexture(new Rect(spriteX, spriteY, spriteSize, spriteSize), MakeColorTex(tintBg));
+                GUI.DrawTexture(new Rect(iconX, iconY, iconSize, iconSize), MakeColorTex(tintBg));
 
-                if (ch.sheet != null)
-                {
-                    // Draw first frame (top-left) of the 4x2 sprite sheet
-                    // Sheet is 4 columns x 2 rows
-                    float frameW = ch.sheet.width / 4f;
-                    float frameH = ch.sheet.height / 2f;
-                    Rect texCoords = new Rect(0, 0.5f, 0.25f, 0.5f); // top-left frame (UV flipped)
-                    GUI.DrawTextureWithTexCoords(new Rect(spriteX, spriteY, spriteSize, spriteSize), ch.sheet, texCoords);
-                }
+                // Draw a stylized chibi silhouette using colored rects/circles
+                DrawCharacterIcon(iconX, iconY, iconSize, ch.characterIndex, ch.color, selected);
 
                 // Selected glow border
                 if (selected)
@@ -249,7 +246,7 @@ namespace Spartha.World
                 }
 
                 // Name
-                float textY = spriteY + spriteSize + 10;
+                float textY = iconY + iconSize + 10;
                 selectedNameStyle.normal.textColor = selected ? ch.color : Color.white;
                 GUI.Label(new Rect(cx, textY, cardW, 30), ch.name, selectedNameStyle);
 
@@ -289,6 +286,123 @@ namespace Spartha.World
             // Hint
             GUI.Label(new Rect(0, confirmY + 60, totalW, 25),
                 "Left/Right to browse  \u2022  Enter to confirm", hintStyle);
+        }
+
+        /// <summary>
+        /// Draws a stylized chibi character icon using OnGUI colored rects.
+        /// Provides a visual preview matching each character's colors.
+        /// </summary>
+        void DrawCharacterIcon(float x, float y, float size, int charIndex, Color accentColor, bool selected)
+        {
+            float scale = size / 120f; // normalize to ~120px base
+
+            // Character color setup
+            Color skinColor = new Color(0.96f, 0.82f, 0.70f);
+            Color hairColor, topColor, bottomColor, shoeColor;
+
+            switch (charIndex)
+            {
+                case CharacterModelBuilder.EMILY:
+                    hairColor = new Color(1.0f, 0.85f, 0.35f);
+                    topColor = new Color(0.30f, 0.15f, 0.40f);
+                    bottomColor = new Color(0.55f, 0.38f, 0.22f);
+                    shoeColor = new Color(0.35f, 0.22f, 0.15f);
+                    break;
+                case CharacterModelBuilder.BRAYDEN:
+                    hairColor = new Color(0.18f, 0.12f, 0.08f);
+                    topColor = new Color(0.10f, 0.10f, 0.12f);
+                    bottomColor = new Color(0.15f, 0.15f, 0.22f);
+                    shoeColor = new Color(0.40f, 0.28f, 0.18f);
+                    break;
+                default: // LUKE
+                    hairColor = new Color(0.45f, 0.30f, 0.15f);
+                    topColor = new Color(0.95f, 0.55f, 0.08f);
+                    bottomColor = new Color(0.20f, 0.20f, 0.25f);
+                    shoeColor = new Color(0.85f, 0.85f, 0.90f);
+                    break;
+            }
+
+            float cx = x + size * 0.5f;
+            float baseY = y + size * 0.15f;
+
+            // Hair (top of head)
+            float hairW = 48 * scale;
+            float hairH = 28 * scale;
+            GUI.DrawTexture(new Rect(cx - hairW / 2, baseY, hairW, hairH), MakeColorTex(hairColor));
+
+            // Head (large circle approximated as rounded rect)
+            float headW = 44 * scale;
+            float headH = 42 * scale;
+            float headY = baseY + 8 * scale;
+            GUI.DrawTexture(new Rect(cx - headW / 2, headY, headW, headH), MakeColorTex(skinColor));
+
+            // Eyes
+            float eyeSize = 8 * scale;
+            float eyeY = headY + 18 * scale;
+            GUI.DrawTexture(new Rect(cx - 10 * scale, eyeY, eyeSize, eyeSize), MakeColorTex(new Color(0.1f, 0.1f, 0.15f)));
+            GUI.DrawTexture(new Rect(cx + 3 * scale, eyeY, eyeSize, eyeSize), MakeColorTex(new Color(0.1f, 0.1f, 0.15f)));
+
+            // Eye highlights
+            float hlSize = 3 * scale;
+            GUI.DrawTexture(new Rect(cx - 8 * scale, eyeY + 1 * scale, hlSize, hlSize), MakeColorTex(Color.white));
+            GUI.DrawTexture(new Rect(cx + 5 * scale, eyeY + 1 * scale, hlSize, hlSize), MakeColorTex(Color.white));
+
+            // Mouth
+            float mouthW = 6 * scale;
+            float mouthH = 2 * scale;
+            GUI.DrawTexture(new Rect(cx - mouthW / 2, eyeY + 12 * scale, mouthW, mouthH), MakeColorTex(new Color(0.85f, 0.50f, 0.45f)));
+
+            // Body / torso
+            float bodyW = 36 * scale;
+            float bodyH = 28 * scale;
+            float bodyY = headY + headH - 2 * scale;
+            GUI.DrawTexture(new Rect(cx - bodyW / 2, bodyY, bodyW, bodyH), MakeColorTex(topColor));
+
+            // Accent stripe
+            float stripeH = 3 * scale;
+            GUI.DrawTexture(new Rect(cx - 10 * scale, bodyY + 12 * scale, 20 * scale, stripeH), MakeColorTex(accentColor));
+
+            // Arms
+            float armW = 10 * scale;
+            float armH = 22 * scale;
+            GUI.DrawTexture(new Rect(cx - bodyW / 2 - armW + 2 * scale, bodyY + 4 * scale, armW, armH), MakeColorTex(topColor));
+            GUI.DrawTexture(new Rect(cx + bodyW / 2 - 2 * scale, bodyY + 4 * scale, armW, armH), MakeColorTex(topColor));
+
+            // Hands
+            float handSize = 7 * scale;
+            GUI.DrawTexture(new Rect(cx - bodyW / 2 - armW + 3 * scale, bodyY + 4 * scale + armH, handSize, handSize), MakeColorTex(skinColor));
+            GUI.DrawTexture(new Rect(cx + bodyW / 2 - 1 * scale, bodyY + 4 * scale + armH, handSize, handSize), MakeColorTex(skinColor));
+
+            // Legs
+            float legW = 14 * scale;
+            float legH = 18 * scale;
+            float legY = bodyY + bodyH - 2 * scale;
+            GUI.DrawTexture(new Rect(cx - 11 * scale, legY, legW, legH), MakeColorTex(bottomColor));
+            GUI.DrawTexture(new Rect(cx - 2 * scale, legY, legW, legH), MakeColorTex(bottomColor));
+
+            // Shoes
+            float shoeW = 16 * scale;
+            float shoeH = 8 * scale;
+            float shoeY = legY + legH - 2 * scale;
+            GUI.DrawTexture(new Rect(cx - 12 * scale, shoeY, shoeW, shoeH), MakeColorTex(shoeColor));
+            GUI.DrawTexture(new Rect(cx - 3 * scale, shoeY, shoeW, shoeH), MakeColorTex(shoeColor));
+
+            // Character-specific details
+            if (charIndex == CharacterModelBuilder.BRAYDEN)
+            {
+                // Glowing phone
+                float phoneW = 5 * scale;
+                float phoneH = 8 * scale;
+                GUI.DrawTexture(new Rect(cx + bodyW / 2 + 1 * scale, bodyY + armH - 2 * scale, phoneW, phoneH), MakeColorTex(accentColor));
+            }
+
+            // Selection glow pulse
+            if (selected)
+            {
+                float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 3f);
+                Color glowCol = new Color(accentColor.r, accentColor.g, accentColor.b, 0.1f * pulse);
+                GUI.DrawTexture(new Rect(x, y, size, size), MakeColorTex(glowCol));
+            }
         }
 
         Texture2D MakeTex(int w, int h, Color col)
