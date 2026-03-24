@@ -4,8 +4,8 @@ namespace Spartha.World
 {
     /// <summary>
     /// Replaces the old 2D sprite billboard system with a proper 3D procedural chibi character.
-    /// Builds the character model via CharacterModelBuilder, attaches CharacterAnimator,
-    /// and handles facing direction + drop shadow.
+    /// Builds the character model via CharacterModelBuilder from AvatarData,
+    /// attaches CharacterAnimator, and handles facing direction + drop shadow.
     /// </summary>
     public class PlayerBillboard : MonoBehaviour
     {
@@ -40,20 +40,18 @@ namespace Spartha.World
         // ── Public API ──────────────────────────────────────────────────
 
         /// <summary>
-        /// Builds the 3D character for the selected character index.
-        /// Call this when the player picks Emily (0), Brayden (1), or Luke (2).
+        /// Builds the 3D character from AvatarData.
+        /// Call this when the player confirms their avatar in the creator.
         /// Replaces any previously built character.
         /// </summary>
-        public void SetCharacter(int characterIndex)
+        public void SetCharacter(AvatarData data)
         {
             // Destroy old model if switching characters
             if (characterModel != null)
                 Destroy(characterModel);
 
-            currentCharacterIndex = characterIndex;
-
-            // Build the procedural 3D model
-            characterModel = CharacterModelBuilder.Build(transform, characterIndex);
+            // Build the procedural 3D model from avatar data
+            characterModel = CharacterModelBuilder.Build(data, transform);
             characterModel.transform.localPosition = Vector3.zero;
 
             // Attach animator
@@ -67,25 +65,45 @@ namespace Spartha.World
         }
 
         /// <summary>
+        /// Legacy compatibility: accepts a character index (0=Emily, 1=Brayden, 2=Luke).
+        /// Converts to AvatarData internally.
+        /// </summary>
+        public void SetCharacter(int characterIndex)
+        {
+            AvatarData data;
+            switch (characterIndex)
+            {
+                case 0:
+                    data = new AvatarData { skinTone = 2, hairStyle = 2, hairColor = 2, eyeStyle = 2, eyeColor = 1, topStyle = 1, topColor = 6, bottomStyle = 1, bottomColor = 2, shoeStyle = 1, accessory = 1, accentColor = 0 };
+                    break;
+                case 1:
+                    data = new AvatarData { skinTone = 2, hairStyle = 0, hairColor = 0, eyeStyle = 3, eyeColor = 3, topStyle = 0, topColor = 0, bottomStyle = 0, bottomColor = 0, shoeStyle = 1, accessory = 6, accentColor = 1 };
+                    break;
+                default:
+                    data = new AvatarData { skinTone = 2, hairStyle = 4, hairColor = 1, eyeStyle = 0, eyeColor = 1, topStyle = 0, topColor = 5, bottomStyle = 1, bottomColor = 1, shoeStyle = 0, accessory = 1, accentColor = 2 };
+                    break;
+            }
+            SetCharacter(data);
+        }
+
+        /// <summary>
         /// Legacy compatibility: accepts a sprite sheet but extracts character index from it.
-        /// Called by CharacterSelect which still passes a sheet reference.
         /// </summary>
         public void SetSpriteSheet(Texture2D sheet)
         {
-            // Determine character from sheet name
             if (sheet == null)
             {
-                SetCharacter(0); // default Emily
+                SetCharacter(0);
                 return;
             }
 
             string name = sheet.name.ToLower();
             if (name.Contains("brayden"))
-                SetCharacter(CharacterModelBuilder.BRAYDEN);
+                SetCharacter(1);
             else if (name.Contains("luke"))
-                SetCharacter(CharacterModelBuilder.LUKE);
+                SetCharacter(2);
             else
-                SetCharacter(CharacterModelBuilder.EMILY);
+                SetCharacter(0);
         }
 
         // ── Shadow ──────────────────────────────────────────────────────

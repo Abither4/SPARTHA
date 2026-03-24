@@ -174,9 +174,9 @@ public class OverworldBuilder : EditorWindow
         var uiObj = new GameObject("OverworldUI");
         uiObj.AddComponent<OverworldUI>();
 
-        // === CHARACTER SELECT ===
-        var charSelect = new GameObject("CharacterSelect");
-        charSelect.AddComponent<CharacterSelect>();
+        // === AVATAR CREATOR ===
+        var avatarCreator = new GameObject("AvatarCreator");
+        avatarCreator.AddComponent<AvatarCreator>();
 
         // Disable player controller until character is chosen
         var pc = player.GetComponent<PlayerController>();
@@ -1375,7 +1375,7 @@ public class OverworldBuilder : EditorWindow
         player.AddComponent<PlayerController>();
         player.AddComponent<RandomEncounter>();
 
-        // 3D character model holder (child object — model built at runtime by CharacterSelect)
+        // 3D character model holder (child object -- model built at runtime by AvatarCreator)
         var modelHolder = new GameObject("ModelHolder");
         modelHolder.transform.parent = player.transform;
         modelHolder.transform.localPosition = Vector3.zero;
