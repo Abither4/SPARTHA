@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df447d0bb227f45499e32311fbfbc325, type: 3}
+  m_Name: Staticleap
+  m_EditorClassIdentifier: Assembly-CSharp::Spartha.Data.SparkSpecies
+  speciesName: Staticleap
+  description: 
+  family: 3
+  elementType: 0
+  sprite: {fileID: 0}
+  homeRegion: Neon Flats
+  minSpawnLevel: 1
+  maxSpawnLevel: 10
+  baseHP: 50
+  baseATK: 78
+  baseDEF: 45
+  baseSPD: 115
+  baseSPA: 82
+  baseSPD_DEF: 85
+  trustGainMultiplier: 1
+  trustDecayMultiplier: 1
+  evolution1: {fileID: 0}
+  evo1LevelGate: 16
+  evo1TrustGate: 0
+  evo1Condition: 
+  evolution2: {fileID: 0}
+  evo2LevelGate: 32
+  evo2TrustGate: 0
+  evo2Condition: 100+ consecutive first-turn moves
+  personalityDescription: Twitchy, hair-trigger reflexes. Always moves first.
+  specialTrait: 'Dash: Up to 60% dodge based on SPD difference'

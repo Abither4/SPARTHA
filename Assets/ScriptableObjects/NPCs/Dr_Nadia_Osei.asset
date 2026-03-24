@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7ab23556199ef74d8e0fac41b126671, type: 3}
+  m_Name: Dr_Nadia_Osei
+  m_EditorClassIdentifier: Assembly-CSharp::Spartha.Data.NPCData
+  npcName: Dr. Nadia Osei
+  role: 0
+  portrait: {fileID: 0}
+  description: Research scientist proving Spark sapience. Auralux's main obstacle.
+    Companion through story arc. Research culminates in Dragon documentation.
+  homeRegion: Upper Harbor
+  isTrainer: 0
+  partySpecies: []
+  partyLevels: 
+  dialogueEntries: []

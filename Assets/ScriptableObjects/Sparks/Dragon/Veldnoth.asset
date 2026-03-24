@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df447d0bb227f45499e32311fbfbc325, type: 3}
+  m_Name: Veldnoth
+  m_EditorClassIdentifier: Assembly-CSharp::Spartha.Data.SparkSpecies
+  speciesName: Veldnoth
+  description: 
+  family: 5
+  elementType: 2
+  sprite: {fileID: 0}
+  homeRegion: The Cinderveil - Throne Spires
+  minSpawnLevel: 35
+  maxSpawnLevel: 50
+  baseHP: 110
+  baseATK: 100
+  baseDEF: 110
+  baseSPD: 85
+  baseSPA: 115
+  baseSPD_DEF: 120
+  trustGainMultiplier: 0.4
+  trustDecayMultiplier: 2.5
+  evolution1: {fileID: 0}
+  evo1LevelGate: 42
+  evo1TrustGate: 0
+  evo1Condition: 60 battles + 100 nullified abilities
+  evolution2: {fileID: 0}
+  evo2LevelGate: 50
+  evo2TrustGate: 0
+  evo2Condition: Resonant 45 days + 100 battles + main quest complete
+  personalityDescription: "Oldest-feeling. Speaks through resonance. Requires restraint
+    \u2014 don't attack. Supreme battle intellect."
+  specialTrait: Alpha Presence

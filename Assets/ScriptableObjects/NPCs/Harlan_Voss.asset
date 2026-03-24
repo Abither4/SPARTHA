@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7ab23556199ef74d8e0fac41b126671, type: 3}
+  m_Name: Harlan_Voss
+  m_EditorClassIdentifier: Assembly-CSharp::Spartha.Data.NPCData
+  npcName: Harlan Voss
+  role: 0
+  portrait: {fileID: 0}
+  description: "Auralux CEO. Not cartoonishly evil \u2014 genuinely believed VC claims.
+    Signed VC authorization unknowingly. Shows real regret in Ch6 confrontation.
+    Potential redemption arc."
+  homeRegion: Upper Harbor
+  isTrainer: 0
+  partySpecies: []
+  partyLevels: 
+  dialogueEntries: []

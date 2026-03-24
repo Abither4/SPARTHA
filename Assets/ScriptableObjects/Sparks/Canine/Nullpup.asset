@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df447d0bb227f45499e32311fbfbc325, type: 3}
+  m_Name: Nullpup
+  m_EditorClassIdentifier: Assembly-CSharp::Spartha.Data.SparkSpecies
+  speciesName: Nullpup
+  description: 
+  family: 0
+  elementType: 2
+  sprite: {fileID: 0}
+  homeRegion: Upper Harbor
+  minSpawnLevel: 34
+  maxSpawnLevel: 45
+  baseHP: 74
+  baseATK: 70
+  baseDEF: 72
+  baseSPD: 82
+  baseSPA: 76
+  baseSPD_DEF: 71
+  trustGainMultiplier: 1.5
+  trustDecayMultiplier: 0.8
+  evolution1: {fileID: 0}
+  evo1LevelGate: 24
+  evo1TrustGate: 0
+  evo1Condition: Rejected at least 1 initial contact
+  evolution2: {fileID: 0}
+  evo2LevelGate: 42
+  evo2TrustGate: 0
+  evo2Condition: 25+ nullified abilities
+  personalityDescription: Eerie quiet. Selective about trust, often rejects initial
+    contact. Discerning judge of character.
+  specialTrait: Pack Bond

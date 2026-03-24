@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df447d0bb227f45499e32311fbfbc325, type: 3}
+  m_Name: Resonyx
+  m_EditorClassIdentifier: Assembly-CSharp::Spartha.Data.SparkSpecies
+  speciesName: Resonyx
+  description: 
+  family: 5
+  elementType: 3
+  sprite: {fileID: 0}
+  homeRegion: The Cinderveil - Throne Spires
+  minSpawnLevel: 35
+  maxSpawnLevel: 50
+  baseHP: 105
+  baseATK: 95
+  baseDEF: 100
+  baseSPD: 95
+  baseSPA: 125
+  baseSPD_DEF: 115
+  trustGainMultiplier: 0.4
+  trustDecayMultiplier: 2.5
+  evolution1: {fileID: 0}
+  evo1LevelGate: 44
+  evo1TrustGate: 0
+  evo1Condition: 70 battles + 75 ally amplifications
+  evolution2: {fileID: 0}
+  evo2LevelGate: 50
+  evo2TrustGate: 0
+  evo2Condition: Resonant 60 days + 120 battles + never abandoned a Spark
+  personalityDescription: Records everything through ECHO. Remembers trainer history.
+    Judges character consistency over time.
+  specialTrait: Alpha Presence

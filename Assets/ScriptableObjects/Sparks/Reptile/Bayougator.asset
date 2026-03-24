@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df447d0bb227f45499e32311fbfbc325, type: 3}
+  m_Name: Bayougator
+  m_EditorClassIdentifier: Assembly-CSharp::Spartha.Data.SparkSpecies
+  speciesName: Bayougator
+  description: 
+  family: 4
+  elementType: 1
+  sprite: {fileID: 0}
+  homeRegion: Bayou Parish
+  minSpawnLevel: 8
+  maxSpawnLevel: 17
+  baseHP: 100
+  baseATK: 90
+  baseDEF: 95
+  baseSPD: 40
+  baseSPA: 75
+  baseSPD_DEF: 120
+  trustGainMultiplier: 0.7
+  trustDecayMultiplier: 0.5
+  evolution1: {fileID: 0}
+  evo1LevelGate: 20
+  evo1TrustGate: 0
+  evo1Condition: 
+  evolution2: {fileID: 0}
+  evo2LevelGate: 40
+  evo2TrustGate: 0
+  evo2Condition: 30+ counter-attacks
+  personalityDescription: Predator patience. Reactive counter specialist that predicts
+    opponent moves.
+  specialTrait: Cold Blood

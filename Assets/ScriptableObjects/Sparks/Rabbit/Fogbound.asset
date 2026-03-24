@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df447d0bb227f45499e32311fbfbc325, type: 3}
+  m_Name: Fogbound
+  m_EditorClassIdentifier: Assembly-CSharp::Spartha.Data.SparkSpecies
+  speciesName: Fogbound
+  description: 
+  family: 3
+  elementType: 7
+  sprite: {fileID: 0}
+  homeRegion: Bayou Parish
+  minSpawnLevel: 8
+  maxSpawnLevel: 17
+  baseHP: 55
+  baseATK: 75
+  baseDEF: 48
+  baseSPD: 110
+  baseSPA: 80
+  baseSPD_DEF: 87
+  trustGainMultiplier: 1
+  trustDecayMultiplier: 1
+  evolution1: {fileID: 0}
+  evo1LevelGate: 18
+  evo1TrustGate: 0
+  evo1Condition: 
+  evolution2: {fileID: 0}
+  evo2LevelGate: 34
+  evo2TrustGate: 0
+  evo2Condition: 25+ evasion-and-counterattacks
+  personalityDescription: Stillness disguised as speed. Ambush timing master, evasion-counter
+    specialist.
+  specialTrait: Dash

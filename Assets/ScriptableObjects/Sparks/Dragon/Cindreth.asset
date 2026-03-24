@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df447d0bb227f45499e32311fbfbc325, type: 3}
+  m_Name: Cindreth
+  m_EditorClassIdentifier: Assembly-CSharp::Spartha.Data.SparkSpecies
+  speciesName: Cindreth
+  description: 
+  family: 5
+  elementType: 5
+  sprite: {fileID: 0}
+  homeRegion: The Cinderveil - Ashfield
+  minSpawnLevel: 30
+  maxSpawnLevel: 50
+  baseHP: 100
+  baseATK: 110
+  baseDEF: 95
+  baseSPD: 90
+  baseSPA: 120
+  baseSPD_DEF: 105
+  trustGainMultiplier: 0.4
+  trustDecayMultiplier: 2.5
+  evolution1: {fileID: 0}
+  evo1LevelGate: 40
+  evo1TrustGate: 0
+  evo1Condition: 50 battles completed
+  evolution2: {fileID: 0}
+  evo2LevelGate: 50
+  evo2TrustGate: 0
+  evo2Condition: Resonant for 30 days + 100 battles + no permadeaths
+  personalityDescription: Curious, watches before approaching. Competence-driven.
+    Most approachable Dragon.
+  specialTrait: 'Alpha Presence: Flinch aura + WIL bonus; friendly-fire at low trust'

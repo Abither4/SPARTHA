@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df447d0bb227f45499e32311fbfbc325, type: 3}
+  m_Name: Voltharrow
+  m_EditorClassIdentifier: Assembly-CSharp::Spartha.Data.SparkSpecies
+  speciesName: Voltharrow
+  description: 
+  family: 0
+  elementType: 0
+  sprite: {fileID: 0}
+  homeRegion: Neon Flats
+  minSpawnLevel: 35
+  maxSpawnLevel: 50
+  baseHP: 85
+  baseATK: 100
+  baseDEF: 80
+  baseSPD: 105
+  baseSPA: 90
+  baseSPD_DEF: 97
+  trustGainMultiplier: 1.5
+  trustDecayMultiplier: 0.8
+  evolution1: {fileID: 0}
+  evo1LevelGate: 0
+  evo1TrustGate: 0
+  evo1Condition: 
+  evolution2: {fileID: 0}
+  evo2LevelGate: 0
+  evo2TrustGate: 0
+  evo2Condition: 
+  personalityDescription: Final form. Lightning incarnate, precision and power fused
+    through deep bond.
+  specialTrait: Pack Bond
