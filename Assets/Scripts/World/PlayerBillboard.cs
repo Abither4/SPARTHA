@@ -72,9 +72,11 @@ namespace Spartha.World
             spriteRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             spriteRenderer.receiveShadows = false;
 
-            // Material: Sprites/Default works perfectly in built-in pipeline
-            // SpriteRenderer sets this automatically, but we ensure it
-            spriteRenderer.sharedMaterial = new Material(Shader.Find("Sprites/Default"));
+            // DO NOT override sharedMaterial. SpriteRenderer's built-in default
+            // material ("Sprites-Default") already handles alpha blending correctly.
+            // Creating a new Material(Shader.Find("Sprites/Default")) can fail
+            // (null shader in builds) or produce a material with wrong render queue,
+            // causing the transparent background to render as a solid box.
         }
 
         void CreateShadow()
